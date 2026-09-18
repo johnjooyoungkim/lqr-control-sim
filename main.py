@@ -6,17 +6,48 @@ import numpy as np
 from CartPole import CartPole
 
 # Parameters defining the sys
-n = 500 # Number of samples
+n = 2000 # Number of samples
 dt = 0.01 # System timebase
 
-M = 5 # Mass of Cart
-m = 0.2 # mass of pendulum bob
+M = 1 # Mass of Cart
+m = 0.1 # mass of pendulum bob
 l = 1 # length from pivot to pendulum's center of mass
 g = 9.8 # graviational acceleration
-b = 0.0 # cart damping (friction between cart and track)
+b = 10.0 # cart damping (friction between cart and track)
+I = None # moment of Inertia of the rod
+
 z0 = [0, 0, np.pi, 0.1] # initial state [ x , x_dot , theta , theta_dot ]
 
-cart_pole = CartPole(M, m, l, g, b)
+cart_pole = CartPole(M, m, l, g, b, I)
+
+
+# building the A and B matrices
+if I is None:
+    I = (1/3) * m * l**2
+
+D = (M+m)*(I + m*l**2) - (m*l)**2
+
+A = [[0, 1, 0, 0],
+     [0, -(I + m*l**2)*b/D, m**2*g*l**2/D, 0],
+     [0, 0, 0, 1],
+     [0, m*l*b/D, m*g*l*(M+m)/D, 0]]
+
+B = [[0],
+     [(I+m*l**2)/D],
+     [0],
+     [m*l/D]] 
+
+# building Q and R
+
+Q = [[0, 0, 0, 0],
+     [0, 1, 0, 0],
+     [0, 0, 1000, 0],
+     [0, 0, 0, 1000]]
+
+R = [[0.1]]
+
+# LQR
+K, S, E = control.lqr(A, B, Q, R)
 
 def rk4_step(z, u, dt, cartpole):
     k1 = cartpole.cartpole_dynamics(z, u)
@@ -31,7 +62,7 @@ z = z0.copy()
 state_history = [z.copy()]
 
 for i in range(n-1):
-    u = 0 #controller(z)  # e.g. -K @ (z - z_eq), or 0 for open-loop test
+    u = -K @ z #controller(z)  # e.g. -K @ (z - z_eq), or 0 for open-loop test
     z = rk4_step(z, u, dt, cart_pole)
     state_history.append(z.copy())
 
