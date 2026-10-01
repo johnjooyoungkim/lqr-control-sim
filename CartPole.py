@@ -5,20 +5,14 @@ import numpy as np
 
 class CartPole:
 
-    def __init__(self, 
-                M = 5, # Mass of Cart
-                m = 0.2, # mass of pendulum bob
-                l = 0.5, # length from pivot to pendulum's center of mass
-                g = 9.8, # graviational acceleration
-                b = 0.0, # cart damping (friction between cart and track)
-                I = None
-                ):
-        self.M = M
-        self.m = m
-        self.l = l
-        self.g = g
-        self.b = b
+    def __init__(self, M = 5, m = 0.2, l = 0.5, g = 9.8, b = 0.0, I = None, sensor_noise_std = 0):
+        self.M = M # Mass of Cart
+        self.m = m # mass of pendulum bob
+        self.l = l # length from pivot to pendulum's center of mass
+        self.g = g # graviational acceleration
+        self.b = b # cart damping (friction between cart and track)
         self.I = I
+        self.sensor_noise_std = sensor_noise_std   
 
     def cartpole_dynamics(self, z, u):
         M, m, l, g, b, I = self.M, self.m, self.l, self.g, self.b, self.I
@@ -36,5 +30,13 @@ class CartPole:
 
         x_ddot = ((I + m*l**2)*F + m**2*g*l**2*sin_t*cos_t) / D
         theta_ddot = (-m*g*l*(M+m)*sin_t - m*l*cos_t*F) / D
-            
+        
         return np.array([x_dot, x_ddot, theta_dot, theta_ddot])
+
+    def sensor_data(self, z): # returns [ x, theta ] with sensor noise and 
+        x, x_dot, theta, theta_dot = z
+
+        x_measured = x + np.random.normal(0, self.sensor_noise_std)
+        theta_measured = theta + np.random.normal(0, self.sensor_noise_std)
+
+        return np.array([x_measured, theta_measured])
