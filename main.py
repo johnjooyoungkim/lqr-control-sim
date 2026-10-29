@@ -1,10 +1,12 @@
-import scipy.signal as sig
+
 import matplotlib.pyplot as plt
 import control
 import numpy as np
 
 from CartPole import CartPole
 from controller import Controller
+
+np.random.seed(0) #
 
 # Parameters defining the sys
 n = 4000 # Number of samples
@@ -122,4 +124,3 @@ axs[-1].set_xlabel('Time [s]')
 plt.tight_layout()
 
 plt.savefig('states.png', dpi=150)
-plt.show()
