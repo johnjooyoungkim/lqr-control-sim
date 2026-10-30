@@ -1,6 +1,6 @@
 # LQR + Kalman Filter on a Cart-Pole
 
-State-space modeling and optimal control of an inverted pendulum on a cart, in Python. A nonlinear cart-pole is simulated, an LQR controller balances it upright, and a Kalman filter reconstructs the full 4-state vector from only two noisy measurements (cart position and pendulum angle). The controller runs on the estimated state, not the true state.
+State-space modeling and optimal control of an inverted pendulum on a cart in Python. A nonlinear cart-pole is simulated, an LQR controller balances it upright, and a Kalman filter reconstructs the full 4-state vector from only two noisy measurements (cart position and pendulum angle). The controller runs on the estimated state, not the true state.
 
   
 <p align="center">
@@ -17,12 +17,12 @@ State-space modeling and optimal control of an inverted pendulum on a cart, in P
 
 ## System model
 
-State `z = [x, ẋ, θ, θ̇]`, where `x` is the cart position and `θ` is the pendulum angle. The angle convention is `θ = 0` hanging down and `θ = π` upright. The input `u` is the horizontal force on the cart.
+State `z = [x, ẋ, θ, ɵ̇]`, where `x` is the cart position and `θ` is the pendulum angle. The angle convention is `θ = 0` hanging down and `θ = π` upright. The input `u` is the horizontal force on the cart.
 
 Nonlinear dynamics (used by the simulator):
 
 ```
-F    = u − b·ẋ + m·l·θ̇²·sin θ
+F    = u − b·ẋ + m·l·ɵ̇²·sin θ
 D    = (M+m)(I + m·l²) − (m·l·cos θ)²
 ẍ    = [ (I + m·l²)·F + m²·g·l²·sin θ·cos θ ] / D
 θ̈    = [ −m·g·l·(M+m)·sin θ − m·l·cos θ·F ] / D
@@ -81,7 +81,7 @@ C = [ 1 0 0 0 ]       process noise   Q_k = diag(1e-4, 1e-3, 1e-4, 1e-3)
     [ 0 0 1 0 ]       sensor noise    R_k = σ² · I,  σ = 0.01
 ```
 
-The two unmeasured states (`ẋ` and `θ̇`) are recovered by the filter from the model and the measured positions.
+The two unmeasured states (`ẋ` and `ɵ̇`) are recovered by the filter from the model and the measured positions.
 
 ## Project structure
 
@@ -106,7 +106,7 @@ The script saves the simulation result in `states.png`
 
 ## Results
 
-Simulation: 40 s, initial state `[x, ẋ, θ, θ̇] = [0, 0, 3.0, 0.1]`, which starts the pendulum about 8.1° away from upright with a small initial angular velocity.
+Simulation: 40 s, initial state `[x, ẋ, θ, ɵ̇] = [0, 0, 3.0, 0.1]`, which starts the pendulum about 8.1° away from upright with a small initial angular velocity.
 
 - **Pendulum:** returns to the upright position (`θ = π`) within about 3 s and then stays within roughly ±0.01 radians 
 - **Cart:** moves to the 3 m reference by about 10 s, then drifts slowly within about ±0.3 m of the target. This slow wander is expected from the weak position weight in `Q` (1) compared with the control penalty `R` (10); the controller prioritizes keeping the pendulum up over holding the cart exactly in place.
@@ -115,7 +115,6 @@ Simulation: 40 s, initial state `[x, ẋ, θ, θ̇] = [0, 0, 3.0, 0.1]`, which s
 
 - The Kalman filter is linear and built on the model linearized at the upright position, so it works near upright but would degrade for large angles. An Extended Kalman Filter is the natural next step.
 - No actuator limits or swing-up (nonlinear) control yet.
-- adding numeric metrics .
 - Results are qualitative. Performance evaluation metrics (settling time, RMS angle error) and a plot of the estimate against the true state would make comparisons easier. Also measuring controller effort would be insightful.
 - Next steps: Nonlinear state estimators (EKF/UKF) and more advanced control (MPC)
 
